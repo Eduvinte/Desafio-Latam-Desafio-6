@@ -1,0 +1,48 @@
+import { useContext, useState, useEffect } from "react";
+import Context from "../Context";
+import axios from "axios";
+
+export default function Home() {
+  const { setUsuario: setUsuarioGlobal } = useContext(Context);
+
+  const [usuario, setUsuarioLocal] = useState({});
+
+  const getUsuarioData = async () => {
+    const urlServer = "http://localhost:3000";
+    const endpoint = "/usuarios";
+    const token = localStorage.getItem("token");
+
+    try {
+      const { data } = await axios.get(urlServer + endpoint, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      setUsuarioGlobal(data);
+      setUsuarioLocal(data);
+      console.log(data)
+    } catch ({ response: { data: message } }) {
+      alert(message + " 🙁");
+      console.log(message);
+    }
+  };
+
+  useEffect(() => {
+    getUsuarioData();
+  },[]);
+
+  return (
+    <div className="py-5">
+      {Object.keys(usuario).length > 0 ? (
+        <>
+          <h1>
+            Bienvenido <span className="fw-bold">{usuario[0].email}</span>
+          </h1>
+          <h3>
+            {usuario[0].rol} en {usuario[0].lenguage}
+          </h3>
+        </>
+      ) : (
+        <p>Cargando...</p>
+      )}
+    </div>
+  );
+}
