@@ -1,9 +1,13 @@
 // Imports
 const express = require('express')
+
+
 const app = express()
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
-const { registerUser, obatainUser } = require('./consultas')
+
+
+const { registerUser, obatainUser, validatedUser } = require('./consultas')
 
 // Server
 app.listen(3000, console.log("¡Server starter success!"))
@@ -27,9 +31,14 @@ app.post('/usuarios', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     try {
-        const {email, password} = req.body
-        const token = jwt.sign({ email }, "az_AZ")
-        res.json(token)
+        const { email, password } = req.body
+        const validation = await validatedUser(email, password)
+        if (!validation) {
+           return res.status(401).json({ error: 'Email o contraseña equivocadas' })
+        }
+            const token = jwt.sign({ email }, "az_AZ")
+            res.json(token)
+        
     } catch (error) {
         console.error(error.message)
         res.status(500).json({ error: 'Ocurrió un error en el servidor' })
@@ -39,7 +48,7 @@ app.post('/login', async (req, res) => {
 app.get('/usuarios', async (req, res) => {
     try {
         const Authorization = req.header("Authorization")
-        if(!Authorization){
+        if (!Authorization) {
 
             return res.status(401).json({ error: 'Token de autorización no proporcionado' })
         }
@@ -54,9 +63,9 @@ app.get('/usuarios', async (req, res) => {
             console.error(error.message)
             res.status(401).json({ error: 'Token de autorización inválido' })
         }
-       
+
     } catch (error) {
         console.error(error.message)
-        res.status(500).json({error: 'Ocurrió un error en el servidor'})
+        res.status(500).json({ error: 'Ocurrió un error en el servidor' })
     }
 })

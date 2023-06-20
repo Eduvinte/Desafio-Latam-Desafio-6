@@ -3,11 +3,11 @@ const { Pool } = require('pg')
 const bcrypt = require('bcryptjs')
 // Connection DB
 const pool = new Pool({
-    localhost:"localhost",
-    user:"postgres",
-    password:"689101101024Edu",
-    database:"softjobs",
-    port:"5432",
+    localhost: "localhost",
+    user: "postgres",
+    password: "689101101024Edu",
+    database: "softjobs",
+    port: "5432",
     allowExitOnIdle: true
 })
 
@@ -16,7 +16,7 @@ const pool = new Pool({
 // Register user
 const registerUser = async (usuario) => {
     try {
-        const {email, password, rol, lenguage } = usuario
+        const { email, password, rol, lenguage } = usuario
         // Encripante password
         const passwordEncrypted = bcrypt.hashSync(password)
         const consulta = "INSERT INTO usuarios VALUES (DEFAULT, $1, $2, $3, $4)"
@@ -38,7 +38,31 @@ const obatainUser = async (email) => {
     }
 }
 
+const validatedUser = async (email, password) => {
+    try {
+        const consulta = "SELECT * FROM usuarios WHERE email = $1"
+        const values = [email]
+        const result = await pool.query(consulta, values)
+
+        if(result.rows.length === 0){
+            return false
+        }
+
+        const user = (result.rows[0])
+        const passwordEncryptado = await bcrypt.compare(password, user.password)
+        if(passwordEncryptado){
+            return true
+        }else{
+            throw new Error('Contraseña incorrecta')
+        }       
+    } catch (error) {
+        console.error('Error al consultar la base de datos:', error);
+        throw error; // Puedes lanzar la excepción para que se maneje en otro lugar si es necesario
+
+    }
+}
+
 
 
 // Exports
-module.exports = { registerUser, obatainUser }
+module.exports = { registerUser, obatainUser, validatedUser }
